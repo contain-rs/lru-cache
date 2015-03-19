@@ -246,10 +246,6 @@ impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
     }
 }
 
-unsafe impl<K: Send, V: Send> Send for LruCache<K, V> {}
-
-unsafe impl<K: Sync, V: Sync> Sync for LruCache<K, V> {}
-
 #[cfg(test)]
 mod tests {
     use super::LruCache;
