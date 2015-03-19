@@ -43,17 +43,18 @@
     <section id='main' class="content mod">
 <h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>lru-cache</a><wbr></span><span class='out-of-band'><a href='stability.html'>[stability]</a> <span id='render-detail'>
             <a id="collapse-all" href="#">[-]</a>&nbsp;<a id="expand-all" href="#">[+]</a>
-        </span><a id='src-0' href='../src/lru-cache/lib.rs.html#12-372'>[src]</a></span></h1>
+        </span><a id='src-0' href='../src/lru-cache/lib.rs.html#11-498'>[src]</a></span></h1>
 <div class='docblock'><p>A cache that holds a limited number of key-value pairs. When the
 capacity of the cache is exceeded, the least-recently-used
 (where &quot;used&quot; means a look-up or putting the pair into the cache)
 pair is automatically removed.</p>
 
-<h1 id="example" class='section-header'><a
-                           href="#example">Example</a></h1><pre id='rust-example-rendered' class='rust '>
+<h1 id="examples" class='section-header'><a
+                           href="#examples">Examples</a></h1><pre id='rust-example-rendered' class='rust '>
 <span class='kw'>use</span> <span class='ident'>lru_cache</span>::<span class='ident'>LruCache</span>;
 
 <span class='kw'>let</span> <span class='kw-2'>mut</span> <span class='ident'>cache</span> <span class='op'>=</span> <span class='ident'>LruCache</span>::<span class='ident'>new</span>(<span class='number'>2</span>);
+
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>1</span>, <span class='number'>10</span>);
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>2</span>, <span class='number'>20</span>);
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>3</span>, <span class='number'>30</span>);
@@ -73,9 +74,24 @@ pair is automatically removed.</p>
 </div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
                     <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.Iter.html'
+                               title='lru-cache::Iter'>Iter</a></td>
+                        <td class='docblock short'><p>An iterator over a cache&#39;s key-value pairs in least- to most-recently-used order.</p>
+</td>
+                    </tr>
+                
+                    <tr>
+                        <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.IterMut.html'
+                               title='lru-cache::IterMut'>IterMut</a></td>
+                        <td class='docblock short'><p>An iterator over a cache&#39;s key-value pairs in least- to most-recently-used order with mutable
+references to the values.</p>
+</td>
+                    </tr>
+                
+                    <tr>
                         <td><a class='stability Unmarked' title='No stability level'></a><a class='struct' href='struct.LruCache.html'
                                title='lru-cache::LruCache'>LruCache</a></td>
-                        <td class='docblock short'><p>An LRU Cache.</p>
+                        <td class='docblock short'><p>An LRU cache.</p>
 </td>
                     </tr>
                 </table></section>
