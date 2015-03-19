@@ -40,13 +40,11 @@
 //! # }
 //! ```
 
-#![feature(core)]
-
 extern crate "linked-hash-map" as linked_hash_map;
 
 use std::fmt;
 use std::hash::Hash;
-use std::iter::{range, IntoIterator, Extend};
+use std::iter::{IntoIterator, Extend};
 
 use linked_hash_map::LinkedHashMap;
 
@@ -205,7 +203,7 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// ```
     #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn set_capacity(&mut self, capacity: usize) {
-        for _ in range(capacity, self.len()) {
+        for _ in capacity..self.len() {
             self.remove_lru();
         }
         self.max_size = capacity;
