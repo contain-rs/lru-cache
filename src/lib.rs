@@ -70,7 +70,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// let mut cache: LruCache<i32, &str> = LruCache::new(10);
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn new(capacity: usize) -> LruCache<K, V> {
         LruCache {
             map: LinkedHashMap::new(),
@@ -96,7 +95,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// assert_eq!(cache.get(&2), Some(&"b"));
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         let old_val = self.map.insert(k, v);
         if self.len() > self.capacity() {
@@ -125,7 +123,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// assert_eq!(cache.get(&2), Some(&"c"));
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn get(&mut self, k: &K) -> Option<&V> {
         self.map.get_refresh(k)
     }
@@ -149,7 +146,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// assert_eq!(cache.len(), 0);
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn remove(&mut self, k: &K) -> Option<V> {
         self.map.remove(k)
     }
@@ -166,7 +162,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// assert_eq!(cache.capacity(), 2);
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn capacity(&self) -> usize {
         self.max_size
     }
@@ -206,7 +201,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// assert_eq!(cache.get(&3), Some(&"c"));
     /// # }
     /// ```
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn set_capacity(&mut self, capacity: usize) {
         for _ in capacity..self.len() {
             self.remove_lru();
@@ -220,15 +214,12 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     }
 
     /// Returns the number of key-value pairs in the cache.
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn len(&self) -> usize { self.map.len() }
 
     /// Returns `true` if the cache contains no key-value pairs.
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn is_empty(&self) -> bool { self.map.is_empty() }
 
     /// Removes all key-value pairs from the cache.
-    #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn clear(&mut self) { self.map.clear(); }
 
 }
