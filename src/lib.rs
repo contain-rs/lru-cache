@@ -48,7 +48,6 @@ use std::iter::IntoIterator;
 
 use linked_hash_map::LinkedHashMap;
 
-// FIXME(conventions): implement iterators?
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
@@ -221,6 +220,63 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
 
     /// Removes all key-value pairs from the cache.
     pub fn clear(&mut self) { self.map.clear(); }
+
+    /// Returns an iterator over the cache's key-value pairs in least- to most-recently-used order.
+    ///
+    /// Accessing the cache through the iterator does _not_ affect the cache's LRU state.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate "lru-cache" as lru_cache;
+    /// # fn main() {
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, 10);
+    /// cache.insert(2, 20);
+    /// cache.insert(3, 30);
+    ///
+    /// let kvs: Vec<_> = cache.iter().collect();
+    /// assert_eq!(kvs, [(&2, &20), (&3, &30)]);
+    /// # }
+    /// ```
+    pub fn iter(&self) -> Iter<K, V> { Iter(self.map.iter()) }
+
+    /// Returns an iterator over the cache's key-value pairs in least- to most-recently-used order
+    /// with mutable references to the values.
+    ///
+    /// Accessing the cache through the iterator does _not_ affect the cache's LRU state.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # extern crate "lru-cache" as lru_cache;
+    /// # fn main() {
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, 10);
+    /// cache.insert(2, 20);
+    /// cache.insert(3, 30);
+    ///
+    /// let mut n = 2;
+    ///
+    /// for (k, v) in cache.iter_mut() {
+    ///     assert_eq!(*k, n);
+    ///     assert_eq!(*v, n * 10);
+    ///     *v *= 10;
+    ///     n += 1;
+    /// }
+    ///
+    /// assert_eq!(n, 4);
+    /// assert_eq!(cache.get(&2), Some(&200));
+    /// assert_eq!(cache.get(&3), Some(&300));
+    /// # }
+    /// ```
+    pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
 }
 
 impl<K: Hash + Eq, V> Extend<(K, V)> for LruCache<K, V> {
@@ -235,7 +291,7 @@ impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "{{"));
 
-        for (i, (k, v)) in self.map.iter().rev().enumerate() {
+        for (i, (k, v)) in self.iter().rev().enumerate() {
             if i != 0 { try!(write!(f, ", ")); }
             try!(write!(f, "{:?}: {:?}", *k, *v));
         }
@@ -243,6 +299,57 @@ impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
         write!(f, "}}")
     }
 }
+
+impl<'a, K, V> IntoIterator for &'a LruCache<K, V> where K: Eq + Hash {
+    type Item = (&'a K, &'a V);
+    type IntoIter = Iter<'a, K, V>;
+    fn into_iter(self) -> Iter<'a, K, V> { self.iter() }
+}
+
+impl<'a, K, V> IntoIterator for &'a mut LruCache<K, V> where K: Eq + Hash {
+    type Item = (&'a K, &'a mut V);
+    type IntoIter = IterMut<'a, K, V>;
+    fn into_iter(self) -> IterMut<'a, K, V> { self.iter_mut() }
+}
+
+/// An iterator over a cache's key-value pairs in least- to most-recently-used order.
+///
+/// Accessing a cache through the iterator does _not_ affect the cache's LRU state.
+pub struct Iter<'a, K: 'a, V: 'a>(linked_hash_map::Iter<'a, K, V>);
+
+impl<'a, K, V> Clone for Iter<'a, K, V> {
+    fn clone(&self) -> Iter<'a, K, V> { Iter(self.0.clone()) }
+}
+
+impl<'a, K, V> Iterator for Iter<'a, K, V> {
+    type Item = (&'a K, &'a V);
+    fn next(&mut self) -> Option<(&'a K, &'a V)> { self.0.next() }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.0.size_hint() }
+}
+
+impl<'a, K, V> DoubleEndedIterator for Iter<'a, K, V> {
+    fn next_back(&mut self) -> Option<(&'a K, &'a V)> { self.0.next_back() }
+}
+
+impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {}
+
+/// An iterator over a cache's key-value pairs in least- to most-recently-used order with mutable
+/// references to the values.
+///
+/// Accessing a cache through the iterator does _not_ affect the cache's LRU state.
+pub struct IterMut<'a, K: 'a, V: 'a>(linked_hash_map::IterMut<'a, K, V>);
+
+impl<'a, K, V> Iterator for IterMut<'a, K, V> {
+    type Item = (&'a K, &'a mut V);
+    fn next(&mut self) -> Option<(&'a K, &'a mut V)> { self.0.next() }
+    fn size_hint(&self) -> (usize, Option<usize>) { self.0.size_hint() }
+}
+
+impl<'a, K, V> DoubleEndedIterator for IterMut<'a, K, V> {
+    fn next_back(&mut self) -> Option<(&'a K, &'a mut V)> { self.0.next_back() }
+}
+
+impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {}
 
 #[cfg(test)]
 mod tests {
@@ -355,5 +462,23 @@ mod tests {
         assert!(cache.get(&1).is_none());
         assert!(cache.get(&2).is_none());
         assert_eq!(format!("{:?}", cache), "{}");
+    }
+
+    #[test]
+    fn test_iter() {
+        let mut cache = LruCache::new(3);
+        cache.insert(1, 10);
+        cache.insert(2, 20);
+        cache.insert(3, 30);
+        cache.insert(4, 40);
+        cache.insert(5, 50);
+        assert_eq!(cache.iter().collect::<Vec<_>>(),
+                   [(&3, &30), (&4, &40), (&5, &50)]);
+        assert_eq!(cache.iter_mut().collect::<Vec<_>>(),
+                   [(&3, &mut 30), (&4, &mut 40), (&5, &mut 50)]);
+        assert_eq!(cache.iter().rev().collect::<Vec<_>>(),
+                   [(&5, &50), (&4, &40), (&3, &30)]);
+        assert_eq!(cache.iter_mut().rev().collect::<Vec<_>>(),
+                   [(&5, &mut 50), (&4, &mut 40), (&3, &mut 30)]);
     }
 }
