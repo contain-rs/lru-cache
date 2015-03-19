@@ -8,7 +8,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-
 //! A cache that holds a limited number of key-value pairs. When the
 //! capacity of the cache is exceeded, the least-recently-used
 //! (where "used" means a look-up or putting the pair into the cache)
@@ -45,7 +44,7 @@ extern crate "linked-hash-map" as linked_hash_map;
 
 use std::fmt;
 use std::hash::Hash;
-use std::iter::{IntoIterator, Extend};
+use std::iter::IntoIterator;
 
 use linked_hash_map::LinkedHashMap;
 
@@ -222,7 +221,6 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
 
     /// Removes all key-value pairs from the cache.
     pub fn clear(&mut self) { self.map.clear(); }
-
 }
 
 impl<K: Hash + Eq, V> Extend<(K, V)> for LruCache<K, V> {
