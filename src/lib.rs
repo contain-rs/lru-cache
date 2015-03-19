@@ -53,7 +53,8 @@ use linked_hash_map::LinkedHashMap;
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
-pub struct LruCache<K, V> {
+#[derive(Clone)]
+pub struct LruCache<K, V> where K: Eq + Hash {
     map: LinkedHashMap<K, V>,
     max_size: usize,
 }
