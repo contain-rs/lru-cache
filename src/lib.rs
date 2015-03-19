@@ -40,8 +40,12 @@
 //! # }
 //! ```
 
+#![feature(std_misc)]
+
 extern crate "linked-hash-map" as linked_hash_map;
 
+use std::collections::hash_map::RandomState;
+use std::collections::hash_state::HashState;
 use std::fmt;
 use std::hash::Hash;
 use std::iter::IntoIterator;
@@ -51,9 +55,8 @@ use linked_hash_map::LinkedHashMap;
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
-#[derive(Clone)]
-pub struct LruCache<K, V> where K: Eq + Hash {
-    map: LinkedHashMap<K, V>,
+pub struct LruCache<K, V, S = RandomState> where K: Eq + Hash, S: HashState {
+    map: LinkedHashMap<K, V, S>,
     max_size: usize,
 }
 
@@ -74,6 +77,13 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
             map: LinkedHashMap::new(),
             max_size: capacity,
         }
+    }
+}
+
+impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
+    /// Creates an empty cache that can hold at most `capacity` items with the given hash state.
+    pub fn with_hash_state(capacity: usize, hash_state: S) -> LruCache<K, V, S> {
+        LruCache { map: LinkedHashMap::with_hash_state(hash_state), max_size: capacity }
     }
 
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
@@ -279,7 +289,7 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
 }
 
-impl<K: Hash + Eq, V> Extend<(K, V)> for LruCache<K, V> {
+impl<K: Hash + Eq, V, S: HashState> Extend<(K, V)> for LruCache<K, V, S> {
     fn extend<T: IntoIterator<Item=(K, V)>>(&mut self, iter: T) {
         for (k, v) in iter {
             self.insert(k, v);
@@ -287,7 +297,7 @@ impl<K: Hash + Eq, V> Extend<(K, V)> for LruCache<K, V> {
     }
 }
 
-impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
+impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug, S: HashState> fmt::Debug for LruCache<A, B, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "{{"));
 
@@ -300,16 +310,20 @@ impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
     }
 }
 
-impl<'a, K, V> IntoIterator for &'a LruCache<K, V> where K: Eq + Hash {
+impl<'a, K, V, S> IntoIterator for &'a LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     type Item = (&'a K, &'a V);
     type IntoIter = Iter<'a, K, V>;
     fn into_iter(self) -> Iter<'a, K, V> { self.iter() }
 }
 
-impl<'a, K, V> IntoIterator for &'a mut LruCache<K, V> where K: Eq + Hash {
+impl<'a, K, V, S> IntoIterator for &'a mut LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     type Item = (&'a K, &'a mut V);
     type IntoIter = IterMut<'a, K, V>;
     fn into_iter(self) -> IterMut<'a, K, V> { self.iter_mut() }
+}
+
+impl<K, V> Clone for LruCache<K, V> where K: Clone + Eq + Hash, V: Clone {
+    fn clone(&self) -> LruCache<K, V> { LruCache { map: self.map.clone(), ..*self } }
 }
 
 /// An iterator over a cache's key-value pairs in least- to most-recently-used order.
