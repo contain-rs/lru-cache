@@ -14,7 +14,7 @@
 //! (where "used" means a look-up or putting the pair into the cache)
 //! pair is automatically removed.
 //!
-//! # Example
+//! # Examples
 //!
 //! ```
 //! # extern crate "lru-cache" as lru_cache;
@@ -22,6 +22,7 @@
 //! use lru_cache::LruCache;
 //!
 //! let mut cache = LruCache::new(2);
+//!
 //! cache.insert(1, 10);
 //! cache.insert(2, 20);
 //! cache.insert(3, 30);
@@ -51,16 +52,16 @@ use linked_hash_map::LinkedHashMap;
 // FIXME(conventions): implement iterators?
 // FIXME(conventions): implement indexing?
 
-/// An LRU Cache.
+/// An LRU cache.
 pub struct LruCache<K, V> {
     map: LinkedHashMap<K, V>,
     max_size: usize,
 }
 
 impl<K: Hash + Eq, V> LruCache<K, V> {
-    /// Create an LRU Cache that holds at most `capacity` items.
+    /// Creates an empty cache that can hold at most `capacity` items.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
@@ -80,12 +81,13 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
     /// returned.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
+    ///
     /// let mut cache = LruCache::new(2);
     ///
     /// cache.insert(1, "a");
@@ -103,14 +105,15 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
         old_val
     }
 
-    /// Return a value corresponding to the key in the cache.
+    /// Returns the value corresponding to the given key in the cache.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
+    ///
     /// let mut cache = LruCache::new(2);
     ///
     /// cache.insert(1, "a");
@@ -127,14 +130,15 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
         self.map.get_refresh(k)
     }
 
-    /// Remove and return a value corresponding to the key from the cache.
+    /// Removes the given key from the cache and returns its corresponding value.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
+    ///
     /// let mut cache = LruCache::new(2);
     ///
     /// cache.insert(2, "a");
@@ -150,9 +154,9 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
         self.map.remove(k)
     }
 
-    /// Return the maximum number of key-value pairs the cache can hold.
+    /// Returns the maximum number of key-value pairs the cache can hold.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
@@ -167,15 +171,16 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
         self.max_size
     }
 
-    /// Change the number of key-value pairs the cache can hold. Remove
+    /// Sets the number of key-value pairs the cache can hold. Removes
     /// least-recently-used key-value pairs if necessary.
     ///
-    /// # Example
+    /// # Examples
     ///
     /// ```
     /// # extern crate "lru-cache" as lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
+    ///
     /// let mut cache = LruCache::new(2);
     ///
     /// cache.insert(1, "a");
@@ -214,15 +219,15 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
         self.map.pop_front()
     }
 
-    /// Return the number of key-value pairs in the cache.
+    /// Returns the number of key-value pairs in the cache.
     #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn len(&self) -> usize { self.map.len() }
 
-    /// Returns whether the cache is currently empty.
+    /// Returns `true` if the cache contains no key-value pairs.
     #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn is_empty(&self) -> bool { self.map.is_empty() }
 
-    /// Clear the cache of all key-value pairs.
+    /// Removes all key-value pairs from the cache.
     #[unstable = "matches collection reform specification, waiting for dust to settle"]
     pub fn clear(&mut self) { self.map.clear(); }
 
@@ -237,8 +242,6 @@ impl<K: Hash + Eq, V> Extend<(K, V)> for LruCache<K, V> {
 }
 
 impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug> fmt::Debug for LruCache<A, B> {
-    /// Return a string that lists the key-value pairs from most-recently
-    /// used to least-recently used.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         try!(write!(f, "{{"));
 
