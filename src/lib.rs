@@ -16,7 +16,7 @@
 //! # Examples
 //!
 //! ```
-//! # extern crate "lru-cache" as lru_cache;
+//! # extern crate lru_cache;
 //! # fn main() {
 //! use lru_cache::LruCache;
 //!
@@ -42,7 +42,7 @@
 
 #![feature(std_misc)]
 
-extern crate "linked-hash-map" as linked_hash_map;
+extern crate linked_hash_map;
 
 use std::collections::hash_map::RandomState;
 use std::collections::hash_state::HashState;
@@ -66,7 +66,7 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(10);
@@ -92,7 +92,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
@@ -117,7 +117,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
@@ -141,7 +141,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
@@ -164,7 +164,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(2);
@@ -181,7 +181,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
@@ -238,7 +238,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
@@ -262,7 +262,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate "lru-cache" as lru_cache;
+    /// # extern crate lru_cache;
     /// # fn main() {
     /// use lru_cache::LruCache;
     ///
