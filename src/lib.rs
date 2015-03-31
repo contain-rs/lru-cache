@@ -16,8 +16,6 @@
 //! # Examples
 //!
 //! ```
-//! # extern crate lru_cache;
-//! # fn main() {
 //! use lru_cache::LruCache;
 //!
 //! let mut cache = LruCache::new(2);
@@ -37,7 +35,6 @@
 //!
 //! cache.set_capacity(1);
 //! assert!(cache.get(&2).is_none());
-//! # }
 //! ```
 
 #![feature(std_misc)]
@@ -66,11 +63,8 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(10);
-    /// # }
     /// ```
     pub fn new(capacity: usize) -> LruCache<K, V> {
         LruCache {
@@ -92,8 +86,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -102,7 +94,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// cache.insert(2, "b");
     /// assert_eq!(cache.get(&1), Some(&"a"));
     /// assert_eq!(cache.get(&2), Some(&"b"));
-    /// # }
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         let old_val = self.map.insert(k, v);
@@ -117,8 +108,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -130,7 +119,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     ///
     /// assert_eq!(cache.get(&1), None);
     /// assert_eq!(cache.get(&2), Some(&"c"));
-    /// # }
     /// ```
     pub fn get(&mut self, k: &K) -> Option<&V> {
         self.map.get_refresh(k)
@@ -141,8 +129,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -153,7 +139,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// assert_eq!(cache.remove(&2), Some("a"));
     /// assert_eq!(cache.remove(&2), None);
     /// assert_eq!(cache.len(), 0);
-    /// # }
     /// ```
     pub fn remove(&mut self, k: &K) -> Option<V> {
         self.map.remove(k)
@@ -164,12 +149,9 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(2);
     /// assert_eq!(cache.capacity(), 2);
-    /// # }
     /// ```
     pub fn capacity(&self) -> usize {
         self.max_size
@@ -181,8 +163,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -208,7 +188,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// assert_eq!(cache.get(&1), None);
     /// assert_eq!(cache.get(&2), None);
     /// assert_eq!(cache.get(&3), Some(&"c"));
-    /// # }
     /// ```
     pub fn set_capacity(&mut self, capacity: usize) {
         for _ in capacity..self.len() {
@@ -238,8 +217,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -250,7 +227,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     ///
     /// let kvs: Vec<_> = cache.iter().collect();
     /// assert_eq!(kvs, [(&2, &20), (&3, &30)]);
-    /// # }
     /// ```
     pub fn iter(&self) -> Iter<K, V> { Iter(self.map.iter()) }
 
@@ -262,8 +238,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// # Examples
     ///
     /// ```
-    /// # extern crate lru_cache;
-    /// # fn main() {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(2);
@@ -284,7 +258,6 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// assert_eq!(n, 4);
     /// assert_eq!(cache.get(&2), Some(&200));
     /// assert_eq!(cache.get(&3), Some(&300));
-    /// # }
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
 }
