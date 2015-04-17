@@ -10,7 +10,7 @@ authors = [
 
 repository = "https://github.com/contain-rs/lru-cache"
 homepage = "https://github.com/contain-rs/lru-cache"
-documentation = "https://contain-rs.github.io/lru-cache/lru-cache"
+documentation = "https://contain-rs.github.io/lru-cache/lru_cache"
 keywords = ["data-structures"]
 readme = "README.md"
 
