@@ -37,7 +37,7 @@
 //! assert!(cache.get(&2).is_none());
 //! ```
 
-#![feature(std_misc)]
+#![feature(hashmap_hasher)]
 
 extern crate linked_hash_map;
 
@@ -46,6 +46,7 @@ use std::collections::hash_state::HashState;
 use std::fmt;
 use std::hash::Hash;
 use std::iter::IntoIterator;
+use std::borrow::Borrow;
 
 use linked_hash_map::LinkedHashMap;
 
@@ -120,8 +121,11 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// assert_eq!(cache.get(&1), None);
     /// assert_eq!(cache.get(&2), Some(&"c"));
     /// ```
-    pub fn get(&mut self, k: &K) -> Option<&V> {
-        self.map.get_refresh(k)
+    pub fn get<Q: ?Sized>(&mut self, k: &Q) -> Option<&V>
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.map.get_refresh(k.borrow()).map(|v| &*v)
     }
 
     /// Removes the given key from the cache and returns its corresponding value.
@@ -140,8 +144,11 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// assert_eq!(cache.remove(&2), None);
     /// assert_eq!(cache.len(), 0);
     /// ```
-    pub fn remove(&mut self, k: &K) -> Option<V> {
-        self.map.remove(k)
+    pub fn remove<Q: ?Sized>(&mut self, k: &Q) -> Option<V>
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.map.remove(k.borrow())
     }
 
     /// Returns the maximum number of key-value pairs the cache can hold.
@@ -197,7 +204,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     }
 
     #[inline]
-    fn remove_lru(&mut self) {
+    fn remove_lru(&mut self) -> Option<(K, V)> {
         self.map.pop_front()
     }
 
