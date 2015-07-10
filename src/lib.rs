@@ -318,7 +318,9 @@ impl<'a, K, V> DoubleEndedIterator for Iter<'a, K, V> {
     fn next_back(&mut self) -> Option<(&'a K, &'a V)> { self.0.next_back() }
 }
 
-impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {}
+impl<'a, K, V> ExactSizeIterator for Iter<'a, K, V> {
+    fn len(&self) -> usize { self.0.len() }
+}
 
 /// An iterator over a cache's key-value pairs in least- to most-recently-used order with mutable
 /// references to the values.
@@ -336,7 +338,9 @@ impl<'a, K, V> DoubleEndedIterator for IterMut<'a, K, V> {
     fn next_back(&mut self) -> Option<(&'a K, &'a mut V)> { self.0.next_back() }
 }
 
-impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {}
+impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {
+    fn len(&self) -> usize { self.0.len() }
+}
 
 #[cfg(test)]
 mod tests {
