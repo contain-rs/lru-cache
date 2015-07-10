@@ -45,7 +45,6 @@ use std::collections::hash_map::RandomState;
 use std::collections::hash_state::HashState;
 use std::fmt;
 use std::hash::Hash;
-use std::iter::IntoIterator;
 use std::borrow::Borrow;
 
 use linked_hash_map::LinkedHashMap;
