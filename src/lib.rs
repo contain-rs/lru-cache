@@ -103,7 +103,8 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
         old_val
     }
 
-    /// Returns the value corresponding to the given key in the cache.
+    /// Returns a mutable reference to the value corresponding to the given key in the cache, if
+    /// any.
     ///
     /// # Examples
     ///
@@ -236,7 +237,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// ```
     pub fn iter(&self) -> Iter<K, V> { Iter(self.map.iter()) }
 
-    /// Returns an iterator over the cache's key-value pairs in least- to most-recently-used order
+    /// Returns an iterator over the cache's key-value pairs in least- to most-recently-used order,
     /// with mutable references to the values.
     ///
     /// Accessing the cache through the iterator does _not_ affect the cache's LRU state.
