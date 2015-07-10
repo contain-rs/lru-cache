@@ -279,14 +279,7 @@ impl<K: Hash + Eq, V, S: HashState> Extend<(K, V)> for LruCache<K, V, S> {
 
 impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug, S: HashState> fmt::Debug for LruCache<A, B, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "{{"));
-
-        for (i, (k, v)) in self.iter().rev().enumerate() {
-            if i != 0 { try!(write!(f, ", ")); }
-            try!(write!(f, "{:?}: {:?}", *k, *v));
-        }
-
-        write!(f, "}}")
+        f.debug_map().entries(self.iter().rev()).finish()
     }
 }
 
