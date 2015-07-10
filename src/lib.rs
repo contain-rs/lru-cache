@@ -342,40 +342,35 @@ impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {}
 mod tests {
     use super::LruCache;
 
-    fn assert_opt_eq<V: PartialEq>(opt: Option<&mut V>, v: V) {
-        assert!(opt.is_some());
-        assert!(opt.unwrap() == &v);
-    }
-
     #[test]
     fn test_put_and_get() {
         let mut cache = LruCache::new(2);
         cache.insert(1, 10);
         cache.insert(2, 20);
-        assert_opt_eq(cache.get_mut(&1), 10);
-        assert_opt_eq(cache.get_mut(&2), 20);
+        assert_eq!(cache.get_mut(&1), Some(&mut 10));
+        assert_eq!(cache.get_mut(&2), Some(&mut 20));
         assert_eq!(cache.len(), 2);
     }
 
     #[test]
     fn test_put_update() {
-        let mut cache: LruCache<String, Vec<u8>> = LruCache::new(1);
-        cache.insert("1".to_string(), vec![10, 10]);
-        cache.insert("1".to_string(), vec![10, 19]);
-        assert_opt_eq(cache.get_mut(&"1".to_string()), vec![10, 19]);
+        let mut cache = LruCache::new(1);
+        cache.insert("1", 10);
+        cache.insert("1", 19);
+        assert_eq!(cache.get_mut("1"), Some(&mut 19));
         assert_eq!(cache.len(), 1);
     }
 
     #[test]
     fn test_expire_lru() {
-        let mut cache: LruCache<String, String> = LruCache::new(2);
-        cache.insert("foo1".to_string(), "bar1".to_string());
-        cache.insert("foo2".to_string(), "bar2".to_string());
-        cache.insert("foo3".to_string(), "bar3".to_string());
-        assert!(cache.get_mut(&"foo1".to_string()).is_none());
-        cache.insert("foo2".to_string(), "bar2update".to_string());
-        cache.insert("foo4".to_string(), "bar4".to_string());
-        assert!(cache.get_mut(&"foo3".to_string()).is_none());
+        let mut cache = LruCache::new(2);
+        cache.insert("foo1", "bar1");
+        cache.insert("foo2", "bar2");
+        cache.insert("foo3", "bar3");
+        assert!(cache.get_mut("foo1").is_none());
+        cache.insert("foo2", "bar2update");
+        cache.insert("foo4", "bar4");
+        assert!(cache.get_mut("foo3").is_none());
     }
 
     #[test]
@@ -404,7 +399,7 @@ mod tests {
 
     #[test]
     fn test_debug() {
-        let mut cache: LruCache<i32, i32> = LruCache::new(3);
+        let mut cache = LruCache::new(3);
         cache.insert(1, 10);
         cache.insert(2, 20);
         cache.insert(3, 30);
@@ -435,9 +430,9 @@ mod tests {
         cache.insert(7, 70);
         cache.insert(8, 80);
         assert!(cache.get_mut(&5).is_none());
-        assert_opt_eq(cache.get_mut(&6), 60);
-        assert_opt_eq(cache.get_mut(&7), 70);
-        assert_opt_eq(cache.get_mut(&8), 80);
+        assert_eq!(cache.get_mut(&6), Some(&mut 60));
+        assert_eq!(cache.get_mut(&7), Some(&mut 70));
+        assert_eq!(cache.get_mut(&8), Some(&mut 80));
     }
 
     #[test]
