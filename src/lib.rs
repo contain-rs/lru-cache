@@ -125,7 +125,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
         where K: Borrow<Q>,
               Q: Hash + Eq
     {
-        self.map.get_refresh(k.borrow()).map(|v| &*v)
+        self.map.get_refresh(k).map(|v| &*v)
     }
 
     /// Removes the given key from the cache and returns its corresponding value.
@@ -148,7 +148,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
         where K: Borrow<Q>,
               Q: Hash + Eq
     {
-        self.map.remove(k.borrow())
+        self.map.remove(k)
     }
 
     /// Returns the maximum number of key-value pairs the cache can hold.
