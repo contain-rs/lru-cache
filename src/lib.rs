@@ -23,18 +23,18 @@
 //! cache.insert(1, 10);
 //! cache.insert(2, 20);
 //! cache.insert(3, 30);
-//! assert!(cache.get(&1).is_none());
-//! assert_eq!(*cache.get(&2).unwrap(), 20);
-//! assert_eq!(*cache.get(&3).unwrap(), 30);
+//! assert!(cache.get_mut(&1).is_none());
+//! assert_eq!(*cache.get_mut(&2).unwrap(), 20);
+//! assert_eq!(*cache.get_mut(&3).unwrap(), 30);
 //!
 //! cache.insert(2, 22);
-//! assert_eq!(*cache.get(&2).unwrap(), 22);
+//! assert_eq!(*cache.get_mut(&2).unwrap(), 22);
 //!
 //! cache.insert(6, 60);
-//! assert!(cache.get(&3).is_none());
+//! assert!(cache.get_mut(&3).is_none());
 //!
 //! cache.set_capacity(1);
-//! assert!(cache.get(&2).is_none());
+//! assert!(cache.get_mut(&2).is_none());
 //! ```
 
 #![feature(hashmap_hasher)]
@@ -93,8 +93,8 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     ///
     /// cache.insert(1, "a");
     /// cache.insert(2, "b");
-    /// assert_eq!(cache.get(&1), Some(&"a"));
-    /// assert_eq!(cache.get(&2), Some(&"b"));
+    /// assert_eq!(cache.get_mut(&1), Some(&mut "a"));
+    /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         let old_val = self.map.insert(k, v);
@@ -118,14 +118,14 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// cache.insert(2, "c");
     /// cache.insert(3, "d");
     ///
-    /// assert_eq!(cache.get(&1), None);
-    /// assert_eq!(cache.get(&2), Some(&"c"));
+    /// assert_eq!(cache.get_mut(&1), None);
+    /// assert_eq!(cache.get_mut(&2), Some(&mut "c"));
     /// ```
-    pub fn get<Q: ?Sized>(&mut self, k: &Q) -> Option<&V>
+    pub fn get_mut<Q: ?Sized>(&mut self, k: &Q) -> Option<&mut V>
         where K: Borrow<Q>,
               Q: Hash + Eq
     {
-        self.map.get_refresh(k).map(|v| &*v)
+        self.map.get_refresh(k)
     }
 
     /// Removes the given key from the cache and returns its corresponding value.
@@ -178,23 +178,23 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// cache.insert(2, "b");
     /// cache.insert(3, "c");
     ///
-    /// assert_eq!(cache.get(&1), None);
-    /// assert_eq!(cache.get(&2), Some(&"b"));
-    /// assert_eq!(cache.get(&3), Some(&"c"));
+    /// assert_eq!(cache.get_mut(&1), None);
+    /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
+    /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     ///
     /// cache.set_capacity(3);
     /// cache.insert(1, "a");
     /// cache.insert(2, "b");
     ///
-    /// assert_eq!(cache.get(&1), Some(&"a"));
-    /// assert_eq!(cache.get(&2), Some(&"b"));
-    /// assert_eq!(cache.get(&3), Some(&"c"));
+    /// assert_eq!(cache.get_mut(&1), Some(&mut "a"));
+    /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
+    /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     ///
     /// cache.set_capacity(1);
     ///
-    /// assert_eq!(cache.get(&1), None);
-    /// assert_eq!(cache.get(&2), None);
-    /// assert_eq!(cache.get(&3), Some(&"c"));
+    /// assert_eq!(cache.get_mut(&1), None);
+    /// assert_eq!(cache.get_mut(&2), None);
+    /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     /// ```
     pub fn set_capacity(&mut self, capacity: usize) {
         for _ in capacity..self.len() {
@@ -263,8 +263,8 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// }
     ///
     /// assert_eq!(n, 4);
-    /// assert_eq!(cache.get(&2), Some(&200));
-    /// assert_eq!(cache.get(&3), Some(&300));
+    /// assert_eq!(cache.get_mut(&2), Some(&mut 200));
+    /// assert_eq!(cache.get_mut(&3), Some(&mut 300));
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
 }
@@ -349,7 +349,7 @@ impl<'a, K, V> ExactSizeIterator for IterMut<'a, K, V> {}
 mod tests {
     use super::LruCache;
 
-    fn assert_opt_eq<V: PartialEq>(opt: Option<&V>, v: V) {
+    fn assert_opt_eq<V: PartialEq>(opt: Option<&mut V>, v: V) {
         assert!(opt.is_some());
         assert!(opt.unwrap() == &v);
     }
@@ -359,8 +359,8 @@ mod tests {
         let mut cache = LruCache::new(2);
         cache.insert(1, 10);
         cache.insert(2, 20);
-        assert_opt_eq(cache.get(&1), 10);
-        assert_opt_eq(cache.get(&2), 20);
+        assert_opt_eq(cache.get_mut(&1), 10);
+        assert_opt_eq(cache.get_mut(&2), 20);
         assert_eq!(cache.len(), 2);
     }
 
@@ -369,7 +369,7 @@ mod tests {
         let mut cache: LruCache<String, Vec<u8>> = LruCache::new(1);
         cache.insert("1".to_string(), vec![10, 10]);
         cache.insert("1".to_string(), vec![10, 19]);
-        assert_opt_eq(cache.get(&"1".to_string()), vec![10, 19]);
+        assert_opt_eq(cache.get_mut(&"1".to_string()), vec![10, 19]);
         assert_eq!(cache.len(), 1);
     }
 
@@ -379,10 +379,10 @@ mod tests {
         cache.insert("foo1".to_string(), "bar1".to_string());
         cache.insert("foo2".to_string(), "bar2".to_string());
         cache.insert("foo3".to_string(), "bar3".to_string());
-        assert!(cache.get(&"foo1".to_string()).is_none());
+        assert!(cache.get_mut(&"foo1".to_string()).is_none());
         cache.insert("foo2".to_string(), "bar2update".to_string());
         cache.insert("foo4".to_string(), "bar4".to_string());
-        assert!(cache.get(&"foo3".to_string()).is_none());
+        assert!(cache.get_mut(&"foo3".to_string()).is_none());
     }
 
     #[test]
@@ -394,7 +394,7 @@ mod tests {
         let opt1 = cache.remove(&1);
         assert!(opt1.is_some());
         assert_eq!(opt1.unwrap(), 10);
-        assert!(cache.get(&1).is_none());
+        assert!(cache.get_mut(&1).is_none());
         assert_eq!(cache.len(), 1);
     }
 
@@ -405,7 +405,7 @@ mod tests {
         cache.insert(1, 10);
         cache.insert(2, 20);
         cache.set_capacity(1);
-        assert!(cache.get(&1).is_none());
+        assert!(cache.get_mut(&1).is_none());
         assert_eq!(cache.capacity(), 1);
     }
 
@@ -420,7 +420,7 @@ mod tests {
         assert_eq!(format!("{:?}", cache), "{2: 22, 3: 30, 1: 10}");
         cache.insert(6, 60);
         assert_eq!(format!("{:?}", cache), "{6: 60, 2: 22, 3: 30}");
-        cache.get(&3);
+        cache.get_mut(&3);
         assert_eq!(format!("{:?}", cache), "{3: 30, 6: 60, 2: 22}");
         cache.set_capacity(2);
         assert_eq!(format!("{:?}", cache), "{3: 30, 6: 60}");
@@ -436,15 +436,15 @@ mod tests {
         cache.insert(5, 50);
         cache.remove(&3);
         cache.remove(&4);
-        assert!(cache.get(&3).is_none());
-        assert!(cache.get(&4).is_none());
+        assert!(cache.get_mut(&3).is_none());
+        assert!(cache.get_mut(&4).is_none());
         cache.insert(6, 60);
         cache.insert(7, 70);
         cache.insert(8, 80);
-        assert!(cache.get(&5).is_none());
-        assert_opt_eq(cache.get(&6), 60);
-        assert_opt_eq(cache.get(&7), 70);
-        assert_opt_eq(cache.get(&8), 80);
+        assert!(cache.get_mut(&5).is_none());
+        assert_opt_eq(cache.get_mut(&6), 60);
+        assert_opt_eq(cache.get_mut(&7), 70);
+        assert_opt_eq(cache.get_mut(&8), 80);
     }
 
     #[test]
@@ -453,8 +453,8 @@ mod tests {
         cache.insert(1, 10);
         cache.insert(2, 20);
         cache.clear();
-        assert!(cache.get(&1).is_none());
-        assert!(cache.get(&2).is_none());
+        assert!(cache.get_mut(&1).is_none());
+        assert!(cache.get_mut(&2).is_none());
         assert_eq!(format!("{:?}", cache), "{}");
     }
 
