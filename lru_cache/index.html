@@ -45,7 +45,7 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-0' class='srclink' href='../src/lru_cache/lib.rs.html#11-478' title='goto source code'>[src]</a></span></h1>
+        </span><a id='src-0' class='srclink' href='../src/lru_cache/lib.rs.html#11-470' title='goto source code'>[src]</a></span></h1>
 <div class='docblock'><p>A cache that holds a limited number of key-value pairs. When the
 capacity of the cache is exceeded, the least-recently-used
 (where &quot;used&quot; means a look-up or putting the pair into the cache)
@@ -60,18 +60,18 @@ pair is automatically removed.</p>
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>1</span>, <span class='number'>10</span>);
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>2</span>, <span class='number'>20</span>);
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>3</span>, <span class='number'>30</span>);
-<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>1</span>).<span class='ident'>is_none</span>());
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>unwrap</span>(), <span class='number'>20</span>);
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>3</span>).<span class='ident'>unwrap</span>(), <span class='number'>30</span>);
+<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>1</span>).<span class='ident'>is_none</span>());
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>unwrap</span>(), <span class='number'>20</span>);
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>3</span>).<span class='ident'>unwrap</span>(), <span class='number'>30</span>);
 
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>2</span>, <span class='number'>22</span>);
-<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>unwrap</span>(), <span class='number'>22</span>);
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='op'>*</span><span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>unwrap</span>(), <span class='number'>22</span>);
 
 <span class='ident'>cache</span>.<span class='ident'>insert</span>(<span class='number'>6</span>, <span class='number'>60</span>);
-<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>3</span>).<span class='ident'>is_none</span>());
+<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>3</span>).<span class='ident'>is_none</span>());
 
 <span class='ident'>cache</span>.<span class='ident'>set_capacity</span>(<span class='number'>1</span>);
-<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>is_none</span>());
+<span class='macro'>assert</span><span class='macro'>!</span>(<span class='ident'>cache</span>.<span class='ident'>get_mut</span>(<span class='kw-2'>&amp;</span><span class='number'>2</span>).<span class='ident'>is_none</span>());
 </pre>
 </div><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
