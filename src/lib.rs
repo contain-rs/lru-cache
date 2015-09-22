@@ -80,6 +80,25 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
         LruCache { map: LinkedHashMap::with_hash_state(hash_state), max_size: capacity }
     }
 
+    /// Checks if the map contains the given key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(1);
+    /// 
+    /// cache.insert(1, "a");
+    /// assert_eq!(cache.contains_key(&1), true);
+    /// ```
+    pub fn contains_key<Q: ?Sized>(&mut self, key: &Q) -> bool
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.get_mut(key).is_some()
+    }
+
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
     /// returned.
     ///
@@ -363,6 +382,13 @@ mod tests {
         cache.insert("1", 19);
         assert_eq!(cache.get_mut("1"), Some(&mut 19));
         assert_eq!(cache.len(), 1);
+    }
+
+    #[test]
+    fn test_contains_key() {
+        let mut cache = LruCache::new(1);
+        cache.insert("1", 10);
+        assert_eq!(cache.contains_key("1"), true);
     }
 
     #[test]
