@@ -54,7 +54,8 @@
     }
 
     function browserSupportsHistoryApi() {
-        return window.history && typeof window.history.pushState === "function";
+        return document.location.protocol != "file:" &&
+          window.history && typeof window.history.pushState === "function";
     }
 
     function highlightSourceLines(ev) {
@@ -76,61 +77,67 @@
     highlightSourceLines(null);
     $(window).on('hashchange', highlightSourceLines);
 
-    // Helper function for Keyboard events,
-    // Get's the char from the keypress event
+    // Gets the human-readable string for the virtual-key code of the
+    // given KeyboardEvent, ev.
     //
-    // This method is used because e.wich === x is not
-    // compatible with non-english keyboard layouts
+    // This function is meant as a polyfill for KeyboardEvent#key,
+    // since it is not supported in Trident.  We also test for
+    // KeyboardEvent#keyCode because the handleShortcut handler is
+    // also registered for the keydown event, because Blink doesn't fire
+    // keypress on hitting the Escape key.
     //
-    // Note: event.type must be keypress !
-    function getChar(event) {
-      if (event.which == null) {
-        return String.fromCharCode(event.keyCode) // IE
-      } else if (event.which!=0 && event.charCode!=0) {
-        return String.fromCharCode(event.which)   // the rest
-      } else {
-        return null // special key
-      }
+    // So I guess you could say things are getting pretty interoperable.
+    function getVirtualKey(ev) {
+        if ("key" in ev && typeof ev.key != "undefined")
+            return ev.key;
+
+        var c = ev.charCode || ev.keyCode;
+        if (c == 27)
+            return "Escape";
+        return String.fromCharCode(c);
     }
 
-    $(document).on('keypress', function handleKeyboardShortcut(e) {
-        if (document.activeElement.tagName === 'INPUT') {
+    function handleShortcut(ev) {
+        if (document.activeElement.tagName == "INPUT")
             return;
-        }
 
-        if (getChar(e) === '?') {
-            if (e.shiftKey && $('#help').hasClass('hidden')) {
-                e.preventDefault();
-                $('#help').removeClass('hidden');
+        switch (getVirtualKey(ev)) {
+        case "Escape":
+            if (!$("#help").hasClass("hidden")) {
+                ev.preventDefault();
+                $("#help").addClass("hidden");
+                $("body").removeClass("blur");
+            } else if (!$("#search").hasClass("hidden")) {
+                ev.preventDefault();
+                $("#search").addClass("hidden");
+                $("#main").removeClass("hidden");
             }
-        } else if (getChar(e) === 's' || getChar(e) === 'S') {
-            e.preventDefault();
-            $('.search-input').focus();
-        }
-    }).on('keydown', function(e) {
-        // The escape key event has to be captured with the keydown event.
-        // Because keypressed has no keycode for the escape key
-        // (and other special keys in general)...
-        if (document.activeElement.tagName === 'INPUT') {
-            return;
-        }
+            break;
 
-        if (e.keyCode === 27) { // escape key
-            if (!$('#help').hasClass('hidden')) {
-                e.preventDefault();
-                $('#help').addClass('hidden');
-            } else if (!$('#search').hasClass('hidden')) {
-                e.preventDefault();
-                $('#search').addClass('hidden');
-                $('#main').removeClass('hidden');
+        case "s":
+        case "S":
+            ev.preventDefault();
+            focusSearchBar();
+            break;
+
+        case "?":
+            if (ev.shiftKey && $("#help").hasClass("hidden")) {
+                ev.preventDefault();
+                $("#help").removeClass("hidden");
+                $("body").addClass("blur");
             }
+            break;
         }
-    }).on('click', function(e) {
-        if (!$(e.target).closest('#help').length) {
-            $('#help').addClass('hidden');
+    }
+
+    $(document).on("keypress", handleShortcut);
+    $(document).on("keydown", handleShortcut);
+    $(document).on("click", function(ev) {
+        if (!$(e.target).closest("#help > div").length) {
+            $("#help").addClass("hidden");
+            $("body").removeClass("blur");
         }
     });
-
 
     $('.version-selector').on('change', function() {
         var i, match,
@@ -150,6 +157,7 @@
 
         document.location.href = url;
     });
+
     /**
      * A function to compute the Levenshtein distance between two strings
      * Licensed under the Creative Commons Attribution-ShareAlike 3.0 Unported
@@ -223,6 +231,28 @@
                 }
             }
 
+            function typePassesFilter(filter, type) {
+                // No filter
+                if (filter < 0) return true;
+
+                // Exact match
+                if (filter === type) return true;
+
+                // Match related items
+                var name = itemTypes[type];
+                switch (itemTypes[filter]) {
+                    case "constant":
+                        return (name == "associatedconstant");
+                    case "fn":
+                        return (name == "method" || name == "tymethod");
+                    case "type":
+                        return (name == "primitive");
+                }
+
+                // No match
+                return false;
+            }
+
             // quoted values mean literal search
             var nSearchWords = searchWords.length;
             if ((val.charAt(0) === "\"" || val.charAt(0) === "'") &&
@@ -232,7 +262,7 @@
                 for (var i = 0; i < nSearchWords; ++i) {
                     if (searchWords[i] === val) {
                         // filter type: ... queries
-                        if (typeFilter < 0 || typeFilter === searchIndex[i].ty) {
+                        if (typePassesFilter(typeFilter, searchIndex[i].ty)) {
                             results.push({id: i, index: -1});
                         }
                     }
@@ -278,7 +308,7 @@
                             searchWords[j].replace(/_/g, "").indexOf(val) > -1)
                         {
                             // filter type: ... queries
-                            if (typeFilter < 0 || typeFilter === searchIndex[j].ty) {
+                            if (typePassesFilter(typeFilter, searchIndex[j].ty)) {
                                 results.push({
                                     id: j,
                                     index: searchWords[j].replace(/_/g, "").indexOf(val),
@@ -288,7 +318,7 @@
                         } else if (
                             (lev_distance = levenshtein(searchWords[j], val)) <=
                                 MAX_LEV_DISTANCE) {
-                            if (typeFilter < 0 || typeFilter === searchIndex[j].ty) {
+                            if (typePassesFilter(typeFilter, searchIndex[j].ty)) {
                                 results.push({
                                     id: j,
                                     index: 0,
@@ -444,11 +474,9 @@
             var matches, type, query, raw = $('.search-input').val();
             query = raw;
 
-            matches = query.match(/^(fn|mod|struct|enum|trait|t(ype)?d(ef)?)\s*:\s*/i);
+            matches = query.match(/^(fn|mod|struct|enum|trait|type|const|macro)\s*:\s*/i);
             if (matches) {
-                type = matches[1].replace(/^td$/, 'typedef')
-                                 .replace(/^tdef$/, 'typedef')
-                                 .replace(/^typed$/, 'typedef');
+                type = matches[1].replace(/^const$/, 'constant');
                 query = query.substring(matches[0].length);
             }
 
@@ -697,6 +725,9 @@
             // Push and pop states are used to add search results to the browser
             // history.
             if (browserSupportsHistoryApi()) {
+                // Store the previous <title> so we can revert back to it later.
+                var previousTitle = $(document).prop("title");
+
                 $(window).on('popstate', function(e) {
                     var params = getQueryStringParams();
                     // When browsing back from search results the main page
@@ -705,6 +736,9 @@
                         $('#main.content').removeClass('hidden');
                         $('#search.content').addClass('hidden');
                     }
+                    // Revert to the previous title manually since the History
+                    // API ignores the title parameter.
+                    $(document).prop("title", previousTitle);
                     // When browsing forward to search results the previous
                     // search will be repeated, so the currentResults are
                     // cleared to ensure the search is successful.
@@ -740,7 +774,8 @@
         if (rootPath === '../') {
             var sidebar = $('.sidebar');
             var div = $('<div>').attr('class', 'block crate');
-            div.append($('<h2>').text('Crates'));
+            div.append($('<h3>').text('Crates'));
+            var ul = $('<ul>').appendTo(div);
 
             var crates = [];
             for (var crate in rawSearchIndex) {
@@ -755,9 +790,10 @@
                 }
                 if (rawSearchIndex[crates[i]].items[0]) {
                     var desc = rawSearchIndex[crates[i]].items[0][3];
-                    div.append($('<a>', {'href': '../' + crates[i] + '/index.html',
+                    var link = $('<a>', {'href': '../' + crates[i] + '/index.html',
                                          'title': plainSummaryLine(desc),
-                                         'class': klass}).text(crates[i]));
+                                         'class': klass}).text(crates[i]);
+                    ul.append($('<li>').append(link));
                 }
             }
             sidebar.append(div);
@@ -776,7 +812,8 @@
             if (!filtered) { return; }
 
             var div = $('<div>').attr('class', 'block ' + shortty);
-            div.append($('<h2>').text(longty));
+            div.append($('<h3>').text(longty));
+            var ul = $('<ul>').appendTo(div);
 
             for (var i = 0; i < filtered.length; ++i) {
                 var item = filtered[i];
@@ -793,9 +830,10 @@
                 } else {
                     path = shortty + '.' + name + '.html';
                 }
-                div.append($('<a>', {'href': current.relpath + path,
+                var link = $('<a>', {'href': current.relpath + path,
                                      'title': desc,
-                                     'class': klass}).text(name));
+                                     'class': klass}).text(name);
+                ul.append($('<li>').append(link));
             }
             sidebar.append(div);
         }
@@ -947,3 +985,8 @@
     }());
 
 }());
+
+// Sets the focus on the search bar at the top of the page
+function focusSearchBar() {
+    $('.search-input').focus();
+}
