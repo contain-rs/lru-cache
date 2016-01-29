@@ -37,14 +37,11 @@
 //! assert!(cache.get_mut(&2).is_none());
 //! ```
 
-#![feature(hashmap_hasher)]
-
 extern crate linked_hash_map;
 
 use std::collections::hash_map::RandomState;
-use std::collections::hash_state::HashState;
 use std::fmt;
-use std::hash::Hash;
+use std::hash::{Hash, BuildHasher};
 use std::borrow::Borrow;
 
 use linked_hash_map::LinkedHashMap;
@@ -52,7 +49,7 @@ use linked_hash_map::LinkedHashMap;
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
-pub struct LruCache<K, V, S = RandomState> where K: Eq + Hash, S: HashState {
+pub struct LruCache<K, V, S = RandomState> where K: Eq + Hash, S: BuildHasher {
     map: LinkedHashMap<K, V, S>,
     max_size: usize,
 }
@@ -74,7 +71,7 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
     }
 }
 
-impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
+impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: BuildHasher {
     /// Creates an empty cache that can hold at most `capacity` items with the given hash state.
     pub fn with_hash_state(capacity: usize, hash_state: S) -> LruCache<K, V, S> {
         LruCache { map: LinkedHashMap::with_hash_state(hash_state), max_size: capacity }
@@ -88,7 +85,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     /// use lru_cache::LruCache;
     ///
     /// let mut cache = LruCache::new(1);
-    /// 
+    ///
     /// cache.insert(1, "a");
     /// assert_eq!(cache.contains_key(&1), true);
     /// ```
@@ -288,7 +285,7 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: HashState {
     pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
 }
 
-impl<K: Hash + Eq, V, S: HashState> Extend<(K, V)> for LruCache<K, V, S> {
+impl<K: Hash + Eq, V, S: BuildHasher> Extend<(K, V)> for LruCache<K, V, S> {
     fn extend<T: IntoIterator<Item=(K, V)>>(&mut self, iter: T) {
         for (k, v) in iter {
             self.insert(k, v);
@@ -296,19 +293,19 @@ impl<K: Hash + Eq, V, S: HashState> Extend<(K, V)> for LruCache<K, V, S> {
     }
 }
 
-impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug, S: HashState> fmt::Debug for LruCache<A, B, S> {
+impl<A: fmt::Debug + Hash + Eq, B: fmt::Debug, S: BuildHasher> fmt::Debug for LruCache<A, B, S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_map().entries(self.iter().rev()).finish()
     }
 }
 
-impl<'a, K, V, S> IntoIterator for &'a LruCache<K, V, S> where K: Eq + Hash, S: HashState {
+impl<'a, K, V, S> IntoIterator for &'a LruCache<K, V, S> where K: Eq + Hash, S: BuildHasher {
     type Item = (&'a K, &'a V);
     type IntoIter = Iter<'a, K, V>;
     fn into_iter(self) -> Iter<'a, K, V> { self.iter() }
 }
 
-impl<'a, K, V, S> IntoIterator for &'a mut LruCache<K, V, S> where K: Eq + Hash, S: HashState {
+impl<'a, K, V, S> IntoIterator for &'a mut LruCache<K, V, S> where K: Eq + Hash, S: BuildHasher {
     type Item = (&'a K, &'a mut V);
     type IntoIter = IterMut<'a, K, V>;
     fn into_iter(self) -> IterMut<'a, K, V> { self.iter_mut() }
