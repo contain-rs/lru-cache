@@ -1,10 +1,6 @@
 language: rust
-rust:
-    - nightly
+rust: nightly
 sudo: false
-matrix:
-  include:
-    - rust: nightly
 script:
     - cargo build
     - cargo test
