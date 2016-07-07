@@ -15,4 +15,4 @@ keywords = ["data-structures"]
 readme = "README.md"
 
 [dependencies]
-linked-hash-map = "0.0.9"
+linked-hash-map = "0.1.0"
