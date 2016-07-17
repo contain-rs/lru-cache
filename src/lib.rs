@@ -73,7 +73,7 @@ impl<K: Hash + Eq, V> LruCache<K, V> {
 
 impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: BuildHasher {
     /// Creates an empty cache that can hold at most `capacity` items with the given hash state.
-    pub fn with_hash_state(capacity: usize, hash_state: S) -> LruCache<K, V, S> {
+    pub fn with_hasher(capacity: usize, hash_state: S) -> LruCache<K, V, S> {
         LruCache { map: LinkedHashMap::with_hash_state(hash_state), max_size: capacity }
     }
 
