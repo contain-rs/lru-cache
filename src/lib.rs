@@ -63,6 +63,7 @@ impl<K: Eq + Hash, V> LruCache<K, V> {
     /// ```
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(10);
+    /// assert!(cache.capacity() == 0);
     /// ```
     pub fn new(max_size: usize) -> Self {
         LruCache {
@@ -70,12 +71,41 @@ impl<K: Eq + Hash, V> LruCache<K, V> {
             max_size: max_size,
         }
     }
+
+    /// Creates an empty cache that can hold at most `max_size` items and allocates
+    /// the maximum amount of space at initialization.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    /// let mut cache: LruCache<i32, &str> = LruCache::at_max_capacity(10);
+    /// assert!(cache.capacity() >= 10);
+    /// ```
+    pub fn at_max_capacity(max_size: usize) -> LruCache<K, V> {
+        LruCache {
+            map: LinkedHashMap::with_capacity(max_size),
+            max_size: max_size,
+        }
+    }
 }
 
 impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// Creates an empty cache that can hold at most `capacity` items with the given hash builder.
-    pub fn with_hasher(capacity: usize, hash_builder: S) -> Self {
-        LruCache { map: LinkedHashMap::with_hasher(hash_builder), max_size: capacity }
+    pub fn with_hasher(max_size: usize, hash_builder: S) -> Self {
+        LruCache {
+            map: LinkedHashMap::with_hasher(hash_builder),
+            max_size: max_size
+        }
+    }
+
+    /// Creates an empty cache that can hold at most `max_size` items with the given hash state and
+    /// allocates the maximum amount of space at initialization.
+    pub fn with_hasher_at_max_capacity(max_size: usize, hash_state: S) -> Self {
+        LruCache {
+            map: LinkedHashMap::with_capacity_and_hasher(max_size, hash_state),
+            max_size: max_size
+        }
     }
 
     /// Checks if the map contains the given key.
@@ -166,6 +196,12 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
               Q: Hash + Eq
     {
         self.map.remove(k)
+    }
+
+    /// Returns the maximum number of key-value pairs the cache can hold without reallocating.
+    /// This is a lower bound.
+    pub fn capacity(&self) -> usize {
+        self.map.capacity()
     }
 
     /// Returns the maximum number of key-value pairs the cache can hold.
