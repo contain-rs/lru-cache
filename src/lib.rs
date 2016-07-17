@@ -219,8 +219,23 @@ impl<K, V, S> LruCache<K, V, S> where K: Eq + Hash, S: BuildHasher {
         self.max_size = capacity;
     }
 
+    /// Removes and returns the least recently used key-value pair as a tuple.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, "a");
+    /// cache.insert(2, "b");
+    ///
+    /// assert_eq!(cache.remove_lru(), Some((1, "a")));
+    /// assert_eq!(cache.len(), 1);
+    /// ```
     #[inline]
-    fn remove_lru(&mut self) -> Option<(K, V)> {
+    pub fn remove_lru(&mut self) -> Option<(K, V)> {
         self.map.pop_front()
     }
 
