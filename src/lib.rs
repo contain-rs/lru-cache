@@ -49,6 +49,7 @@ use linked_hash_map::LinkedHashMap;
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
+#[derive(Clone)]
 pub struct LruCache<K, V, S = RandomState> where K: Eq + Hash, S: BuildHasher {
     map: LinkedHashMap<K, V, S>,
     max_size: usize,
@@ -324,10 +325,6 @@ impl<'a, K, V, S> IntoIterator for &'a mut LruCache<K, V, S> where K: Eq + Hash,
     type Item = (&'a K, &'a mut V);
     type IntoIter = IterMut<'a, K, V>;
     fn into_iter(self) -> IterMut<'a, K, V> { self.iter_mut() }
-}
-
-impl<K, V> Clone for LruCache<K, V> where K: Clone + Eq + Hash, V: Clone {
-    fn clone(&self) -> LruCache<K, V> { LruCache { map: self.map.clone(), ..*self } }
 }
 
 /// An iterator over a cache's key-value pairs in least- to most-recently-used order.
