@@ -535,6 +535,21 @@
 <span id="491">491</span>
 <span id="492">492</span>
 <span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
 </pre><pre class='rust '>
 <span class='comment'>// Copyright 2015 The Rust Project Developers. See the COPYRIGHT</span>
 <span class='comment'>// file at the top-level directory of this distribution and at</span>
@@ -757,8 +772,23 @@
         <span class='self'>self</span>.<span class='ident'>max_size</span> <span class='op'>=</span> <span class='ident'>capacity</span>;
     }
 
+    <span class='doccomment'>/// Removes and returns the least recently used key-value pair as a tuple.</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// # Examples</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// ```</span>
+    <span class='doccomment'>/// use lru_cache::LruCache;</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// let mut cache = LruCache::new(2);</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// cache.insert(1, &quot;a&quot;);</span>
+    <span class='doccomment'>/// cache.insert(2, &quot;b&quot;);</span>
+    <span class='doccomment'>///</span>
+    <span class='doccomment'>/// assert_eq!(cache.remove_lru(), Some((1, &quot;a&quot;)));</span>
+    <span class='doccomment'>/// assert_eq!(cache.len(), 1);</span>
+    <span class='doccomment'>/// ```</span>
     <span class='attribute'>#[<span class='ident'>inline</span>]</span>
-    <span class='kw'>fn</span> <span class='ident'>remove_lru</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span>(<span class='ident'>K</span>, <span class='ident'>V</span>)<span class='op'>&gt;</span> {
+    <span class='kw'>pub</span> <span class='kw'>fn</span> <span class='ident'>remove_lru</span>(<span class='kw-2'>&amp;</span><span class='kw-2'>mut</span> <span class='self'>self</span>) <span class='op'>-&gt;</span> <span class='prelude-ty'>Option</span><span class='op'>&lt;</span>(<span class='ident'>K</span>, <span class='ident'>V</span>)<span class='op'>&gt;</span> {
         <span class='self'>self</span>.<span class='ident'>map</span>.<span class='ident'>pop_front</span>()
     }
 
