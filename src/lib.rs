@@ -82,7 +82,7 @@ impl<K: Eq + Hash, V> LruCache<K, V> {
     /// let mut cache: LruCache<i32, &str> = LruCache::at_max_capacity(10);
     /// assert!(cache.capacity() >= 10);
     /// ```
-    pub fn at_max_capacity(max_size: usize) -> LruCache<K, V> {
+    pub fn at_max_capacity(max_size: usize) -> Self {
         LruCache {
             map: LinkedHashMap::with_capacity(max_size),
             max_size: max_size,
