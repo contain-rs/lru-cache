@@ -148,6 +148,31 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
         self.map.get_refresh(k)
     }
 
+    /// Returns an immutable reference to the value corresponding to the given key in the cache, if
+    /// any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, "a");
+    /// cache.insert(2, "b");
+    /// cache.insert(2, "c");
+    /// cache.insert(3, "d");
+    ///
+    /// assert_eq!(cache.peek(&1), None);
+    /// assert_eq!(cache.peek(&2), Some(&"c"));
+    /// ```
+    pub fn peek<Q: ?Sized>(&self, k: &Q) -> Option<&V>
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.map.get(k)
+    }
+
     /// Removes the given key from the cache and returns its corresponding value.
     ///
     /// # Examples
