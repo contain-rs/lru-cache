@@ -14,5 +14,9 @@ documentation = "https://contain-rs.github.io/lru-cache/lru_cache"
 keywords = ["data-structures"]
 readme = "README.md"
 
+[features]
+default = []
+
 [dependencies]
 linked-hash-map = "0.2"
+heapsize = { version = "0.3.7", optional = true }
