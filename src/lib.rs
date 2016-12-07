@@ -90,11 +90,11 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// cache.insert(1, "a");
     /// assert_eq!(cache.contains_key(&1), true);
     /// ```
-    pub fn contains_key<Q: ?Sized>(&mut self, key: &Q) -> bool
+    pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
         where K: Borrow<Q>,
               Q: Hash + Eq
     {
-        self.get_mut(key).is_some()
+        self.map.contains_key(key)
     }
 
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
