@@ -46,6 +46,9 @@ use std::hash::{Hash, BuildHasher};
 
 use linked_hash_map::LinkedHashMap;
 
+#[cfg(feature = "heapsize_impl")]
+mod heapsize;
+
 // FIXME(conventions): implement indexing?
 
 /// An LRU cache.
