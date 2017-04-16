@@ -23,18 +23,18 @@
 //! cache.insert(1, 10);
 //! cache.insert(2, 20);
 //! cache.insert(3, 30);
-//! assert!(cache.get_mut(&1).is_none());
-//! assert_eq!(*cache.get_mut(&2).unwrap(), 20);
-//! assert_eq!(*cache.get_mut(&3).unwrap(), 30);
+//! assert!(cache.get(&1).is_none());
+//! assert_eq!(*cache.get(&2).unwrap(), 20);
+//! assert_eq!(*cache.get(&3).unwrap(), 30);
 //!
 //! cache.insert(2, 22);
-//! assert_eq!(*cache.get_mut(&2).unwrap(), 22);
+//! assert_eq!(*cache.get(&2).unwrap(), 22);
 //!
 //! cache.insert(6, 60);
-//! assert!(cache.get_mut(&3).is_none());
+//! assert!(cache.get(&3).is_none());
 //!
 //! cache.set_capacity(1);
-//! assert!(cache.get_mut(&2).is_none());
+//! assert!(cache.get(&2).is_none());
 //! ```
 
 extern crate linked_hash_map;
@@ -93,11 +93,11 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// cache.insert(1, "a");
     /// assert_eq!(cache.contains_key(&1), true);
     /// ```
-    pub fn contains_key<Q: ?Sized>(&mut self, key: &Q) -> bool
+    pub fn contains_key<Q: ?Sized>(&self, key: &Q) -> bool
         where K: Borrow<Q>,
               Q: Hash + Eq
     {
-        self.get_mut(key).is_some()
+        self.map.contains_key(key)
     }
 
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
@@ -121,6 +121,31 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
             self.remove_lru();
         }
         old_val
+    }
+
+    /// Returns a reference to the value corresponding to the given key in the cache, if
+    /// any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, "a");
+    /// cache.insert(2, "b");
+    /// cache.insert(2, "c");
+    /// cache.insert(3, "d");
+    ///
+    /// assert_eq!(cache.get(&1), None);
+    /// assert_eq!(cache.get(&2), Some(&"c"));
+    /// ```
+    pub fn get<Q: ?Sized>(&mut self, k: &Q) -> Option<&V>
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.map.get_refresh(k).map(|v| v as &V)
     }
 
     /// Returns a mutable reference to the value corresponding to the given key in the cache, if
@@ -441,6 +466,8 @@ mod tests {
         let mut cache = LruCache::new(2);
         cache.insert(1, 10);
         cache.insert(2, 20);
+        assert_eq!(cache.get(&1), Some(&10));
+        assert_eq!(cache.get(&2), Some(&20));
         assert_eq!(cache.get_mut(&1), Some(&mut 10));
         assert_eq!(cache.get_mut(&2), Some(&mut 20));
         assert_eq!(cache.len(), 2);
