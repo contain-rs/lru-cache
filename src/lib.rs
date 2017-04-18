@@ -123,6 +123,31 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
         old_val
     }
 
+    /// Returns a reference to the value corresponding to the given key in the cache, if
+    /// any.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// cache.insert(1, "a");
+    /// cache.insert(2, "b");
+    /// cache.insert(2, "c");
+    /// cache.insert(3, "d");
+    ///
+    /// assert_eq!(cache.get(&1), None);
+    /// assert_eq!(cache.get(&2), Some(&"c"));
+    /// ```
+    pub fn get<Q: ?Sized>(&mut self, k: &Q) -> Option<&V>
+        where K: Borrow<Q>,
+              Q: Hash + Eq
+    {
+        self.map.get_refresh(k).map(|v| v as &V)
+    }
+
     /// Returns a mutable reference to the value corresponding to the given key in the cache, if
     /// any.
     ///
@@ -146,6 +171,45 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
               Q: Hash + Eq
     {
         self.map.get_refresh(k)
+    }
+
+    /// Returns a reference to the value corresponding to the given key in the cache,
+    /// if it exists or inserts the result of `f(&key)` into to the cache
+    /// and returns a reference to it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// assert_eq!(cache.get_or_insert(1, |_| "a"), &"a");
+    /// ```
+    pub fn get_or_insert<F>(&mut self, key: K, f: F) -> &V
+    where K: Clone, F: FnOnce(&K) -> V {
+        self.get_mut_or_insert(key, f) as &V
+    }
+
+    /// Returns a mutable reference to the value corresponding to the given key in the cache,
+    /// if it exists or inserts the result of `f(&key)` into to the cache
+    /// and returns a mutable reference to it.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    ///
+    /// let mut cache = LruCache::new(2);
+    ///
+    /// assert_eq!(cache.get_mut_or_insert(1, |_| "a"), &"a");
+    /// ```
+    pub fn get_mut_or_insert<F>(&mut self, key: K, f: F) -> &mut V
+    where K: Clone, F: FnOnce(&K) -> V {
+        if !self.contains_key(&key) {
+            self.insert(key.clone(), f(&key));
+        }
+        self.get_mut(&key).unwrap()
     }
 
     /// Removes the given key from the cache and returns its corresponding value.
@@ -563,5 +627,25 @@ mod tests {
                    [(&5, &50), (&4, &40), (&3, &30)]);
         assert_eq!(cache.iter_mut().rev().collect::<Vec<_>>(),
                    [(&5, &mut 50), (&4, &mut 40), (&3, &mut 30)]);
+    }
+
+    #[test]
+    fn test_get_or_insert() {
+        let mut cache = LruCache::new(3);
+        let borrowed = cache.get_or_insert(42, |_| 1234 );
+        assert_eq!(borrowed, &1234);
+    }
+
+    #[test]
+    fn test_get_mut_or_insert() {
+        let mut cache = LruCache::new(3);
+        {
+            let borrowed = cache.get_mut_or_insert(42, |_| vec![] );
+            assert_eq!(borrowed, &vec![]);
+            borrowed.push(true);
+        } {
+            let borrowed = cache.get(&42).unwrap();
+            assert_eq!(borrowed, &vec![true]);
+        }
     }
 }
