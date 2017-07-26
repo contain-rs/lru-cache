@@ -9,7 +9,7 @@
 // except according to those terms.
 
 //! A cache that holds a limited number of key-value pairs. When the
-//! capacity of the cache is exceeded, the least-recently-used
+//! maximum size of the cache is exceeded, the least-recently-used
 //! (where "used" means a look-up or putting the pair into the cache)
 //! pair is automatically removed.
 //!
@@ -33,7 +33,7 @@
 //! cache.insert(6, 60);
 //! assert!(cache.get_mut(&3).is_none());
 //!
-//! cache.set_capacity(1);
+//! cache.set_max_size(1);
 //! assert!(cache.get_mut(&2).is_none());
 //! ```
 
@@ -66,19 +66,49 @@ impl<K: Eq + Hash, V> LruCache<K, V> {
     /// ```
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(10);
+    /// assert!(cache.capacity() == 0);
     /// ```
-    pub fn new(capacity: usize) -> Self {
+    pub fn new(max_size: usize) -> Self {
         LruCache {
             map: LinkedHashMap::new(),
-            max_size: capacity,
+            max_size: max_size,
+        }
+    }
+
+    /// Creates an empty cache that can hold at most `max_size` items and allocates
+    /// the maximum amount of space at initialization.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use lru_cache::LruCache;
+    /// let mut cache: LruCache<i32, &str> = LruCache::at_max_capacity(10);
+    /// assert!(cache.capacity() >= 10);
+    /// ```
+    pub fn at_max_capacity(max_size: usize) -> Self {
+        LruCache {
+            map: LinkedHashMap::with_capacity(max_size),
+            max_size: max_size,
         }
     }
 }
 
 impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// Creates an empty cache that can hold at most `capacity` items with the given hash builder.
-    pub fn with_hasher(capacity: usize, hash_builder: S) -> Self {
-        LruCache { map: LinkedHashMap::with_hasher(hash_builder), max_size: capacity }
+    pub fn with_hasher(max_size: usize, hash_builder: S) -> Self {
+        LruCache {
+            map: LinkedHashMap::with_hasher(hash_builder),
+            max_size: max_size
+        }
+    }
+
+    /// Creates an empty cache that can hold at most `max_size` items with the given hash state and
+    /// allocates the maximum amount of space at initialization.
+    pub fn with_hasher_at_max_capacity(max_size: usize, hash_state: S) -> Self {
+        LruCache {
+            map: LinkedHashMap::with_capacity_and_hasher(max_size, hash_state),
+            max_size: max_size
+        }
     }
 
     /// Checks if the map contains the given key.
@@ -117,7 +147,7 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// ```
     pub fn insert(&mut self, k: K, v: V) -> Option<V> {
         let old_val = self.map.insert(k, v);
-        if self.len() > self.capacity() {
+        if self.len() > self.max_size() {
             self.remove_lru();
         }
         old_val
@@ -171,6 +201,12 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
         self.map.remove(k)
     }
 
+    /// Returns the maximum number of key-value pairs the cache can hold without reallocating.
+    /// This is a lower bound.
+    pub fn capacity(&self) -> usize {
+        self.map.capacity()
+    }
+
     /// Returns the maximum number of key-value pairs the cache can hold.
     ///
     /// # Examples
@@ -178,9 +214,9 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// ```
     /// use lru_cache::LruCache;
     /// let mut cache: LruCache<i32, &str> = LruCache::new(2);
-    /// assert_eq!(cache.capacity(), 2);
+    /// assert_eq!(cache.max_size(), 2);
     /// ```
-    pub fn capacity(&self) -> usize {
+    pub fn max_size(&self) -> usize {
         self.max_size
     }
 
@@ -202,7 +238,7 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
     /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     ///
-    /// cache.set_capacity(3);
+    /// cache.set_max_size(3);
     /// cache.insert(1, "a");
     /// cache.insert(2, "b");
     ///
@@ -210,17 +246,17 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
     /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     ///
-    /// cache.set_capacity(1);
+    /// cache.set_max_size(1);
     ///
     /// assert_eq!(cache.get_mut(&1), None);
     /// assert_eq!(cache.get_mut(&2), None);
     /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     /// ```
-    pub fn set_capacity(&mut self, capacity: usize) {
-        for _ in capacity..self.len() {
+    pub fn set_max_size(&mut self, new_size: usize) {
+        for _ in new_size..self.len() {
             self.remove_lru();
         }
-        self.max_size = capacity;
+        self.max_size = new_size;
     }
 
     /// Removes and returns the least recently used key-value pair as a tuple.
@@ -488,14 +524,14 @@ mod tests {
     }
 
     #[test]
-    fn test_change_capacity() {
+    fn test_change_max_size() {
         let mut cache = LruCache::new(2);
-        assert_eq!(cache.capacity(), 2);
+        assert_eq!(cache.max_size(), 2);
         cache.insert(1, 10);
         cache.insert(2, 20);
-        cache.set_capacity(1);
+        cache.set_max_size(1);
         assert!(cache.get_mut(&1).is_none());
-        assert_eq!(cache.capacity(), 1);
+        assert_eq!(cache.max_size(), 1);
     }
 
     #[test]
@@ -511,7 +547,7 @@ mod tests {
         assert_eq!(format!("{:?}", cache), "{6: 60, 2: 22, 3: 30}");
         cache.get_mut(&3);
         assert_eq!(format!("{:?}", cache), "{3: 30, 6: 60, 2: 22}");
-        cache.set_capacity(2);
+        cache.set_max_size(2);
         assert_eq!(format!("{:?}", cache), "{3: 30, 6: 60}");
     }
 
