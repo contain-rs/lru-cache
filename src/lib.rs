@@ -51,6 +51,13 @@ mod heapsize;
 
 // FIXME(conventions): implement indexing?
 
+/// The type returned by the `insert` function.
+#[derive(Debug)]
+pub struct InsertionReturn<K, V> {
+    pub old_value: Option<V>,
+    pub lru_removed: Option<(K, V)>,
+}
+
 /// An LRU cache.
 #[derive(Clone)]
 pub struct LruCache<K: Eq + Hash, V, S: BuildHasher = RandomState> {
@@ -101,7 +108,7 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     }
 
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
-    /// returned.
+    /// returned. Removes and returns the least recently used key-value pair if necessary.
     ///
     /// # Examples
     ///
@@ -115,12 +122,16 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&1), Some(&mut "a"));
     /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
     /// ```
-    pub fn insert(&mut self, k: K, v: V) -> Option<V> {
-        let old_val = self.map.insert(k, v);
-        if self.len() > self.capacity() {
-            self.remove_lru();
-        }
-        old_val
+    pub fn insert(&mut self, k: K, v: V) -> InsertionReturn<K, V> {
+        let old_value = self.map.insert(k, v);
+
+        let lru_removed = if self.len() > self.capacity() {
+            self.remove_lru()
+        } else {
+            None
+        };
+
+        InsertionReturn { old_value, lru_removed }
     }
 
     /// Returns a mutable reference to the value corresponding to the given key in the cache, if
@@ -184,8 +195,10 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
         self.max_size
     }
 
-    /// Sets the number of key-value pairs the cache can hold. Removes
-    /// least-recently-used key-value pairs if necessary.
+    /// Sets the number of key-value pairs the cache can hold.
+    /// Removes and returns least-recently-used key-value pairs
+    /// in the least-to-most recently used order (least at the front),
+    /// if necessary.
     ///
     /// # Examples
     ///
@@ -216,14 +229,20 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&2), None);
     /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     /// ```
-    pub fn set_capacity(&mut self, capacity: usize) {
+    pub fn set_capacity(&mut self, capacity: usize) -> Vec<(K, V)> {
+        let cap = capacity.saturating_sub(self.len());
+        let mut removed_lrus = Vec::with_capacity(cap);
+
         for _ in capacity..self.len() {
-            self.remove_lru();
+            let removed = self.remove_lru().unwrap();
+            removed_lrus.push(removed);
         }
+
         self.max_size = capacity;
+        removed_lrus
     }
 
-    /// Removes and returns the least recently used key-value pair as a tuple.
+    /// Removes and returns the least recently used key-value pair.
     ///
     /// # Examples
     ///
