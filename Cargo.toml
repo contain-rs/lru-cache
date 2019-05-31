@@ -13,6 +13,7 @@ homepage = "https://github.com/contain-rs/lru-cache"
 documentation = "https://contain-rs.github.io/lru-cache/lru_cache"
 keywords = ["data-structures"]
 readme = "README.md"
+exclude = ["/.travis.yml", "/deploy-docs.sh"]
 
 [features]
 heapsize_impl = ["heapsize", "linked-hash-map/heapsize_impl"]
