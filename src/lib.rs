@@ -46,8 +46,11 @@ use std::hash::{Hash, BuildHasher};
 
 use linked_hash_map::LinkedHashMap;
 
+mod entry;
 #[cfg(feature = "heapsize_impl")]
 mod heapsize;
+
+pub use entry::{Entry, OccupiedEntry, VacantEntry};
 
 // FIXME(conventions): implement indexing?
 
@@ -302,6 +305,20 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&3), Some(&mut 300));
     /// ```
     pub fn iter_mut(&mut self) -> IterMut<K, V> { IterMut(self.map.iter_mut()) }
+
+    pub fn entry(&mut self, k: K) -> Entry<K, V, S> {
+        let self_ptr = self as *mut Self;
+
+        match self.map.entry(k) {
+            linked_hash_map::Entry::Occupied(e) => Entry::Occupied(OccupiedEntry{
+                entry: e,
+            }),
+            linked_hash_map::Entry::Vacant(e) => Entry::Vacant(VacantEntry{
+                entry: e,
+                cache: self_ptr,
+            }),
+        }
+    }
 }
 
 impl<K: Eq + Hash, V, S: BuildHasher> Extend<(K, V)> for LruCache<K, V, S> {
