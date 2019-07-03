@@ -41,7 +41,7 @@ extern crate linked_hash_map;
 
 use std::borrow::Borrow;
 use std::collections::hash_map::RandomState;
-use std::fmt;
+use std::fmt::{self, Debug};
 use std::hash::{Hash, BuildHasher};
 
 use linked_hash_map::LinkedHashMap;
@@ -50,6 +50,31 @@ use linked_hash_map::LinkedHashMap;
 mod heapsize;
 
 // FIXME(conventions): implement indexing?
+
+/// The type returned by the `insert` function.
+#[derive(Clone)]
+pub struct Insert<K, V> {
+    pub old_value: Option<V>,
+    pub lru_removed: Option<(K, V)>,
+}
+
+impl<K: Eq + Hash, V: PartialEq> PartialEq for Insert<K, V> {
+    fn eq(&self, other: &Insert<K, V>) -> bool {
+        self.old_value == other.old_value
+        && self.lru_removed == self.lru_removed
+    }
+}
+
+impl<K: Eq + Hash, V: Eq> Eq for Insert<K, V> { }
+
+impl<K: Eq + Hash + Debug, V: Debug> Debug for Insert<K, V> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Insert")
+            .field("old_value", &self.old_value)
+            .field("lru_removed", &self.lru_removed)
+            .finish()
+    }
+}
 
 /// An LRU cache.
 #[derive(Clone)]
@@ -101,7 +126,7 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     }
 
     /// Inserts a key-value pair into the cache. If the key already existed, the old value is
-    /// returned.
+    /// returned. Removes and returns the least recently used key-value pair if necessary.
     ///
     /// # Examples
     ///
@@ -115,12 +140,16 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&1), Some(&mut "a"));
     /// assert_eq!(cache.get_mut(&2), Some(&mut "b"));
     /// ```
-    pub fn insert(&mut self, k: K, v: V) -> Option<V> {
-        let old_val = self.map.insert(k, v);
-        if self.len() > self.capacity() {
-            self.remove_lru();
-        }
-        old_val
+    pub fn insert(&mut self, k: K, v: V) -> Insert<K, V> {
+        let old_value = self.map.insert(k, v);
+
+        let lru_removed = if self.len() > self.capacity() {
+            self.remove_lru()
+        } else {
+            None
+        };
+
+        Insert { old_value, lru_removed }
     }
 
     /// Returns a mutable reference to the value corresponding to the given key in the cache, if
@@ -184,8 +213,10 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
         self.max_size
     }
 
-    /// Sets the number of key-value pairs the cache can hold. Removes
-    /// least-recently-used key-value pairs if necessary.
+    /// Sets the number of key-value pairs the cache can hold.
+    /// Removes and returns least-recently-used key-value pairs
+    /// in the least-to-most recently used order (least at the front),
+    /// if necessary.
     ///
     /// # Examples
     ///
@@ -216,14 +247,20 @@ impl<K: Eq + Hash, V, S: BuildHasher> LruCache<K, V, S> {
     /// assert_eq!(cache.get_mut(&2), None);
     /// assert_eq!(cache.get_mut(&3), Some(&mut "c"));
     /// ```
-    pub fn set_capacity(&mut self, capacity: usize) {
+    pub fn set_capacity(&mut self, capacity: usize) -> Vec<(K, V)> {
+        let cap = capacity.saturating_sub(self.len());
+        let mut removed_lrus = Vec::with_capacity(cap);
+
         for _ in capacity..self.len() {
-            self.remove_lru();
+            let removed = self.remove_lru().unwrap();
+            removed_lrus.push(removed);
         }
+
         self.max_size = capacity;
+        removed_lrus
     }
 
-    /// Removes and returns the least recently used key-value pair as a tuple.
+    /// Removes and returns the least recently used key-value pair.
     ///
     /// # Examples
     ///
